@@ -21,6 +21,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.ExprEvalException;
 import org.apache.jena.sparql.expr.ExprList;
+import org.apache.jena.sparql.expr.NodeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,8 +111,13 @@ public class IteratorPlanImpl extends PlanBase implements IteratorPlan {
                             for (int i = 0; i < vars.size(); i++) {
                                 Var v = vars.get(i);
                                 try {
-                                    Node n = nodeValues.get(i).get(j).asNode();
-                                    bindingHashMapOverwrite.add(v, n);
+                                    NodeValue nodeValue = nodeValues.get(i).get(j);
+                                    Node n = null;
+                                    if(nodeValue!=null) {
+                                        n = nodeValue.asNode();
+                                    }
+                                        bindingHashMapOverwrite.add(v, n);
+
                                 } catch (IndexOutOfBoundsException ex) {
                                     LOG.warn("The number of variables does not match the number of names provided to the iterator arguments");
                                     break;

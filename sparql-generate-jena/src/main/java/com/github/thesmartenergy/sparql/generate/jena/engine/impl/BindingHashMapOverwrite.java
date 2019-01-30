@@ -69,6 +69,13 @@ public class BindingHashMapOverwrite extends PlanBase implements Binding {
     }
 
     /**
+     * Removes a variable and its bound node from this binding.
+     */
+    public final void remove(final Var var) {
+        map.remove(var);
+    }
+
+    /**
      * Constructs a new binding from a query solution.
      *
      * @param binding -

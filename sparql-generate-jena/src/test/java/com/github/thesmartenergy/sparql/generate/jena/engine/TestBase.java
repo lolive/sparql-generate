@@ -140,6 +140,10 @@ public class TestBase {
         Model expectedOutput = RDFDataMgr.loadModel(expectedOutputUri.toString(), Lang.TTL);
         StringWriter sw = new StringWriter();
         expectedOutput.write(sw, "TTL");
+        if(!output.isIsomorphicWith(expectedOutput)){
+            log.error("Expected: "+expectedOutput.toString());
+            log.error("Found: "+output.toString());
+        }
         assertTrue("Error with test " + exampleDir, output.isIsomorphicWith(expectedOutput));
     }
 

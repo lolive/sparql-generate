@@ -133,6 +133,12 @@ public class ITER_CSVStream extends IteratorStreamFunctionBase {
             LOG.debug("Columns names must be a string, got: " + args.subList(2, args.size()));
             throw new ExprEvalException("Columns names must be a string, got: " + args.subList(2, args.size()));
         }
+        if (args.size()>=4) {
+            if  (args.get(3)==null ||!args.get(3).isString() || args.get(3).asString().length()!=1) {
+                LOG.debug("Fourth argument must be a single-char string, got: " + args.get(3));
+                throw new ExprEvalException("Fourth argument must be a single-char string, got: " + args.get(3));
+            }
+        }
 
         String csvPath = args.get(0).asString();
         int chunkSize = args.get(1).getInteger().intValue();
@@ -142,9 +148,13 @@ public class ITER_CSVStream extends IteratorStreamFunctionBase {
 
         CsvParserSettings parserSettings = new CsvParserSettings();
         parserSettings.getFormat().setLineSeparator("\n");
+        parserSettings.setMaxCharsPerColumn(1000000);
+        if (args.size()>=4 && args.get(3)!=null && args.get(3).isString() && args.get(3).asString().length()==1) {
+            parserSettings.getFormat().setDelimiter(args.get(3).asString().charAt(0));
+        }
         parserSettings.setHeaderExtractionEnabled(true);
 
-        if (args.size() == 3 && args.get(2).asString().equals("*")) {
+        if (args.size() >= 3 && args.get(2).asString().equals("*")) {
             // nothing to be done, by default the CSV library retrieves all columns
         } else {
             String[] wantedColumns = args.subList(2, args.size()).stream().map(NodeValue::asString).toArray(String[]::new);
@@ -158,7 +168,14 @@ public class ITER_CSVStream extends IteratorStreamFunctionBase {
                         List<List<NodeValue>> nodeValues = getColumnValuesAsMapOfIndexes().values().stream().
                                 map(column -> column.stream().
                                         //convert each cell from string to a NodeValue to be fed to nodeValuesStream.accept
-                                                map(cell -> (NodeValue) new NodeValueString(cell)).
+                                                map(
+                                                cell -> {
+                                                    if(cell!=null)
+                                                        return (NodeValue) new NodeValueString(cell);
+                                                    else
+                                                        return null;
+                                                }
+                                        ).
                                                 collect(Collectors.toList())).
                                 collect(Collectors.toList());
                         nodeValuesStream.accept(nodeValues);
